@@ -13,6 +13,9 @@ public class Main {
 
     public static void main(String[] args) {
 
+        signMenu();
+        System.exit(0);
+
         System.out.println("---------");
         System.out.println("|IS-2Buy|");
         System.out.println("---------\n");
@@ -25,89 +28,90 @@ public class Main {
     }
 
     static void signUp() {
+        String usernameFilePath = "JAVA\\\\Transaction\\\\users.txt";
         String passwordFilePath = "JAVA\\\\Transaction\\\\password.txt";
-        String idFilePath = "JAVA\\\\Transaction\\\\id.txt";
         String username = "", password = "";
-        int count = 0;
+        boolean available = false;
 
-        switch(userRead()){
-            case 0 -> System.out.println("Username: (" + username + ") is available.");
-            case 1 -> System.out.println("Username already exists!\n");        
-        }        
-        
+        do {
+            System.out.println("SIGN-UP\n");
 
-        System.out.println("Password: ");
+            System.out.print("Username: ");
+            username = scan.nextLine();
+            System.out.println("-----------------");
+
+            if (userExists(username).flag) {
+                System.out.println("Username already exists!");
+            } else {
+                System.out.println("Available");
+                available = true;
+            }
+            System.out.println("-----------------");
+
+        } while (available == false);
+
+        System.out.print("Password: ");
         password = scan.nextLine();
+        System.out.println("-----------------");
+
+        try (FileWriter writer = new FileWriter(usernameFilePath, true)) {
+            writer.write(username + "\n");
+            writer.close();
+
+        } catch (Exception e) {
+            System.out.println("Something went wrong...");
+        }
+        System.out.println("-----------------");
 
         try (FileWriter writer = new FileWriter(passwordFilePath, true)) {
             writer.write(password + "\n");
             writer.close();
-        } catch (Exception e) {
-            System.out.println("Something went wrong...");
-        }
 
-        try (FileReader reader = new FileReader(idFilePath);
-                BufferedReader bufferedReader = new BufferedReader(reader)) {
-
-            while (bufferedReader.readLine() != null) {
-                count++;
-            }
-            System.out.println("Account: (" + username + ") successfully created!");
-            System.out.printf("ID: %06d\n", count);
-        } catch (Exception e) {
-            System.out.println("Something went wrong...");
-        }
-
-        try (FileWriter writer = new FileWriter(idFilePath, true)) {
-            writer.write(count + "\n");
+            System.out.println("Account Successfully Created!");
         } catch (Exception e) {
             System.out.println("Something went wrong...");
         }
         System.out.println("-----------------");
+
     }
 
-    static void signIn() {
-        String filePath = "JAVA\\Transaction\\users.txt", line;
-        int count = 0;
+    static boolean signIn() {
 
-        try {
-            FileReader reader = new FileReader(filePath);
-            BufferedReader bufferedReader = new BufferedReader(reader);
+        String username = "", password = "";
+        boolean userFound = false;
 
-            String username, password;
-            boolean exists = false;
+        testDataType test;
 
-            while (!exists) {
+        do {
 
-                System.out.print("Username: ");
+            System.out.print("Username: ");
+            username = scan.nextLine();
+            System.out.println("-----------------");
 
-                username = scan.nextLine();
+            System.out.print("Password: ");
+            password = scan.nextLine();     
+            System.out.println("-----------------");       
 
-                System.out.print("Password: ");
-                password = scan.nextLine();
+            test = userExists(username);
 
-                while ((line = bufferedReader.readLine()) != null) {
-                    count++;
-                    if (username.equals(line)) {
-                        System.out.println("Account found.\n");
-                        System.out.printf("ID: %06d\n", count - 1);
-                        exists = true;
-                    }
+            if (test.flag) {
+
+                if(passwordMatch(password, test.number) == false){
+                    System.out.println("Wrong Account/Password!");
                 }
-                bufferedReader.close();
-                reader.close();
-                reader = new FileReader(filePath);
-                bufferedReader = new BufferedReader(reader);
-
-                if (exists == false) {
-                    System.out.println("Account does not exist!");
+                else{
+                    userFound = true;
+                    System.out.println("Login Successful!");
                 }
+                System.out.println("-----------------");
+            } else{
+                System.out.println("No such Account!");
             }
+            System.out.println("-----------------");
 
-        } catch (Exception e) {
-            System.out.println("Something went wrong...");
-        }
-        System.out.println("-----------------");
+        } while (userFound == false);
+
+        return userFound;
     }
 
     static void shop() {
@@ -138,7 +142,9 @@ public class Main {
                 case 1 -> {
                     System.out.println("Sign-in\n");
                     scan.nextLine();
-                    signIn();
+                    do {
+
+                    } while (!signIn());
                 }
                 case 2 -> {
                     scan.nextLine();
@@ -196,47 +202,69 @@ public class Main {
         System.out.println("-----------------");
     }
 
-    static int userRead() {
+    static testDataType userExists(String username) {
         String userFilePath = "JAVA\\Transaction\\users.txt";
-        String username = "";
-        boolean exists = true;
+
+        boolean userFound = false;
         String line;
-        int flag = 0;
+        int count = 0;
 
         try {
             FileReader reader = new FileReader(userFilePath);
             BufferedReader bufferedReader = new BufferedReader(reader);
 
-            while (exists) {
+            while ((line = bufferedReader.readLine()) != null) {
 
-                System.out.println("Username: ");
-                username = scan.nextLine();
+                // System.out.println(username + "==" + line);
 
-                while ((line = bufferedReader.readLine()) != null) {
-                    if (username.equals(line)) {
-                        bufferedReader.close();
-                        reader.close();
-                        reader = new FileReader(userFilePath);
-                        bufferedReader = new BufferedReader(reader);
-                        exists = true;
-                        flag = 1;
-                        break;
+                if (username.equals(line)) {
 
-                    } else {
-                        exists = false;
-                    }
+                    bufferedReader.close();
+                    reader.close();
+
+                    reader = new FileReader(userFilePath);
+                    bufferedReader = new BufferedReader(reader);
+
+                    userFound = true;
+                    break;
                 }
-                if (exists == false) {
-                    flag = 0;
-                }
+                count++;
             }
+
             reader.close();
             bufferedReader.close();
+
         } catch (Exception e) {
             System.out.println("Something went wrong...");
         }
-        userWrite();
-        return flag;
+
+        return new testDataType(userFound, count);
+    }
+
+    static boolean passwordMatch(String password, int count) {
+        String passwordFilePath = "JAVA\\Transaction\\password.txt";
+
+        String line = "";
+
+        try {
+            FileReader reader = new FileReader(passwordFilePath);
+            BufferedReader bufferedReader = new BufferedReader(reader);
+
+            for(int i = 0; i <= count; i++){
+                line = bufferedReader.readLine();
+                //System.out.println(password + "==" + line);
+            }
+            
+
+            reader.close();
+            bufferedReader.close();         
+
+        } catch (Exception e) {
+            System.out.println("Something went wrong...");
+        }
+
+        return(password.equals(line));
+
     }
 
     static void userWrite() {
